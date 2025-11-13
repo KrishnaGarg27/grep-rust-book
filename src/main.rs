@@ -6,8 +6,7 @@ use std::fs;
 use std::process;
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let config = Config::build(&args).unwrap_or_else(|err| {
+    let config = Config::build(env::args()).unwrap_or_else(|err| {
         eprintln!("Process unsuccessful: {err}");
         process::exit(1);
     });
@@ -41,13 +40,14 @@ struct Config {
 }
 
 impl Config {
-    fn build(args: &[String]) -> Result<Config, &'static str> {
-        if args.len() < 3 {
-            return Err("Number of arguments must be 3");
-        }
-
-        let query = args[1].clone();
-        let file = args[2].clone();
+    fn build(mut args: impl Iterator<Item = String>) -> Result<Config, &'static str> {
+        args.next();
+        let Some(query) = args.next() else {
+            return Err("Search query not entered");
+        };
+        let Some(file) = args.next() else {
+            return Err("File path not entered");
+        };
         let ignore_case = env::var("IGNORE_CASE").is_ok();
 
         Ok(Config {
